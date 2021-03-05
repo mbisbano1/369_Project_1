@@ -3,11 +3,13 @@ import threading
 
 serverPort=11111
 serverHost="locahost"
+encoding="UTF-8"
+
+running=True
 
 class TCPServerMultithread:
 	def __init__(self):
 		print("Using server port of %s" % serverPort)
-		running=True
 
 		try:
 			serverSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
@@ -17,8 +19,8 @@ class TCPServerMultithread:
 			serverSocket.listen(5)
 
 			while (running):
-				print("Threaded TCP server listening on port %s" % serverPort)
-				threading.Thread(target=self.talkToClient, args=(serverSocket.accept()))
+				c, addr = serverSocket.accept()
+				threading.Thread(target=self.talkToClient, args=(c, addr )).start()
 
 			print("Server shutting down")
 			serverSocket.shutdown(0)
@@ -39,18 +41,21 @@ class TCPServerMultithread:
 
 
 	def talkToClient(connectionSocket, socket, address):
-		print("Accepted a connection from %s" % address)
+		print("Accepted a connection from ", address)
 
 		while 1:
-			message=connectionSocket.recv(1024)
+			message=socket.recv(1024).decode(encoding)
 			print("Received message: %s" % message)
 
-			connectionSocket.send(message.upper())
+			socket.send(message.upper().encode(encoding))
 
 			if (message == "shutdown"):
-				running=0
-			elif ((message == "quit") or (message == "shutdown")):
-				connectionSocket.close()
-				break
+				running=False
+			if ((message == "quit") or (message == "shutdown")):
+				socket.close()
+				return
+
+
+
 
 TCPServerMultithread()
