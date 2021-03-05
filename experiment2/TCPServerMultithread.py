@@ -18,9 +18,19 @@ class TCPServerMultithread:
 			serverSocket.bind((host, serverPort))
 			serverSocket.listen(5)
 
+			threadList=[]
+
 			while (running):
+				print("start of loop. ", threading.active_count(), "threads open")
 				c, addr = serverSocket.accept()
-				threading.Thread(target=self.talkToClient, args=(c, addr )).start()
+				temp=threading.Thread(target=self.talkToClient, args=(c, addr ))
+				temp.daemon=True
+				temp.start() 
+				threadList.append(temp)
+				print("end of loop. ", threading.active_count(), "threads open")
+
+			for thread in threadList:
+				thread.join()
 
 			print("Server shutting down")
 			serverSocket.shutdown(0)
@@ -40,20 +50,25 @@ class TCPServerMultithread:
 			exit(1)
 
 
-	def talkToClient(connectionSocket, socket, address):
+	def talkToClient(self, socket, address):
 		print("Accepted a connection from ", address)
+		watchdog=0
 
-		while 1:
+		while (watchdog < 50): 
+			watchdog+=1
 			message=socket.recv(1024).decode(encoding)
 			print("Received message: %s" % message)
 
 			socket.send(message.upper().encode(encoding))
 
 			if (message == "shutdown"):
-				running=False
-			if ((message == "quit") or (message == "shutdown")):
 				socket.close()
-				return
+				break
+			elif (message == "quit"):
+				socket.close()
+				break
+
+		running=False
 
 
 
