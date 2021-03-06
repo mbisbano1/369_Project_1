@@ -23,7 +23,6 @@ class TCPClient:
 				print("Received message: %s" % modifiedMessage.decode(encoding))
 
 				if ((message == "quit") or (message == "shutdown")):
-					print("Client exit")
 					break
 			
 			clientSocket.close()
