@@ -1,25 +1,37 @@
 import socket
 import threading
-import traceback
+import sys
 
-serverPort=11111
 encoding="UTF-8"
-
-running=True
 
 class TCPServerMultithread:
 	def __init__(self):
-		print("Server port is %s" % serverPort)
+		if (len(sys.argv) != 2):
+			print("Usage: python3 TCPServerMultithread.py server_port")
+			exit(1)
 
+		try:
+			serverPort=int(sys.argv[1])
+		except ValueError:
+			print("Error: input argument invalid.")
+			exit(1)
+
+		if ((serverPort <= 1024) or (serverPort >= 65536)):
+			print("Error: Server port value must be greater than 1024 and less than 65536.")
+			exit(1)
+
+		self.serverLoop(serverPort)
+
+	def serverLoop(self, serverPort):
 		try:
 			serverSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
 			host=socket.gethostname()
 			serverSocket.bind((host, serverPort))
+			print("Ready")
 			serverSocket.listen(5)
-
 			threadList=[]
 
-			while (running):
+			while True: 
 				c, addr = serverSocket.accept()
 				temp=threading.Thread(target=self.talkToClient, args=(c, addr ))
 				temp.daemon=True
@@ -35,7 +47,7 @@ class TCPServerMultithread:
 		except IOError:
 			if (serverSocket):
 				serverSocket.close()
-			print("Error opening socket.")
+			print("Error: Could not open socket.")
 			exit(1)
 
 		except KeyboardInterrupt:
@@ -44,7 +56,6 @@ class TCPServerMultithread:
 				serverSocket.close()
 				print("Socket closed successfully.")
 			exit(1)
-
 
 	def talkToClient(self, socket, address):
 		print("Accepted a connection from ", address)
@@ -63,7 +74,5 @@ class TCPServerMultithread:
 			elif (message == "quit"):
 				socket.close()
 				break
-
-		running=False
 
 TCPServerMultithread()
