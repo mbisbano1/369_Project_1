@@ -1,10 +1,8 @@
 import socket
 import threading
-import traceback
 import sys
 
 encoding="UTF-8"
-running=True
 
 class TCPServerMultithread:
 	def __init__(self):
@@ -22,18 +20,18 @@ class TCPServerMultithread:
 			print("Error: Server port value must be greater than 1024 and less than 65536.")
 			exit(1)
 
+		self.serverLoop(serverPort)
 
-		print("Using server port %s" % serverPort)
-
+	def serverLoop(self, serverPort):
 		try:
 			serverSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
 			host=socket.gethostname()
 			serverSocket.bind((host, serverPort))
+			print("Ready")
 			serverSocket.listen(5)
-
 			threadList=[]
 
-			while (running):
+			while True: 
 				c, addr = serverSocket.accept()
 				temp=threading.Thread(target=self.talkToClient, args=(c, addr ))
 				temp.daemon=True
@@ -59,7 +57,6 @@ class TCPServerMultithread:
 				print("Socket closed successfully.")
 			exit(1)
 
-
 	def talkToClient(self, socket, address):
 		print("Accepted a connection from ", address)
 		watchdog=0
@@ -77,7 +74,5 @@ class TCPServerMultithread:
 			elif (message == "quit"):
 				socket.close()
 				break
-
-		running=False
 
 TCPServerMultithread()
