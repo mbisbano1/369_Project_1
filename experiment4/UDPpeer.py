@@ -22,14 +22,14 @@ class UDPPeer:
 				print("Message Received from: ", clientAddress)
 				print(message.decode())
 				if (message.decode()[0:20] == ' ECE369 Peer Active ') and (clientAddress not in self.peersList):
-					self.peersList.append(clientAddress)
-					print("Appended ", clientAddress, " to peersList")
+					self.peersList.append(clientAddress[0])
+					print("Appended ", clientAddress[0], " to peersList")
 				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
-					self.peersList.remove(clientAddress) 
-					print("Removed ", clientAddress, " from peersList")
+					self.peersList.remove(clientAddress[0]) 
+					print("Removed ", clientAddress[0], " from peersList")
 				
 				ackMessage = 'Receipt Acknowledged from: ' + self.addr
-				serverS.sendto(ackMessage.encode(), clientAddress)
+				serverS.sendto(ackMessage.encode(), (clientAddress[0], self.ServerPort))
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
