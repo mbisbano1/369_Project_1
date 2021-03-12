@@ -23,8 +23,10 @@ class UDPPeer:
 				print(message.decode())
 				if (message.decode()[0:20] == ' ECE369 Peer Active ') and (clientAddress not in self.peersList):
 					self.peersList.append(clientAddress)
+					print("Appended ", clientAddress, " to peersList")
 				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
 					self.peersList.remove(clientAddress) 
+					print("Removed ", clientAddress, " from peersList")
 				
 				ackMessage = 'Receipt Acknowledged from: ' + self.addr
 				serverS.sendto(ackMessage.encode(), clientAddress)
