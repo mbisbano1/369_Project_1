@@ -1,31 +1,6 @@
 import socket
 import sys, threading
 
-#host_name = socket.gethostname()
-#IP_ADDR = socket.gethostbyname(host_name)
-#print("Host name is: ", host_name)
-#print("IP ADDR is: ", IP_ADDR)
-#HOST = socket.get_hostbyname(socket.get_hostname())
-
-#global server_address	# = ''
-#global server_port		# = 12000
-#global client_address	# = ''
-#global client_port		# = 12001
-
-#running = 1
-
-## server side
-#serverSocket = socket(AF_INET, SOCK_DGRAM)
-#host = socket.gethostname(serverSocket)
-
-#serverSocket.bind((host, local_port))
-#serverSocket.bind((local_address, local_port))
-
-#print("Host is:", host)
-
-## client side
-#clientSocket = socket(AF_INET, SOCK_DGRAM)
-
 class UDPPeer:
 	"""UDP P2P Class/Object"""
 	hostname = ''			# Each peer has it's own hostname
@@ -35,6 +10,65 @@ class UDPPeer:
 	ClientPort = 12001      # Each peer has it's output/client side port at 12001 for now
 	serverRunning = True	# Each peer has a status for it's server and client side
 	clientRunning = True	# ...
+	
+	def serverSide(self):
+		print("Starting Server Thread!")
+		try:	# Try setting up the server
+			serverS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			serverS.bind(('',self.ServerPort))
+			print("ServerSide is ready to receive.")
+			while self.serverRunning:
+				message, clientAddress = serverS.recvfrom(2048)
+				print("Message Received from: ", clientAddress)
+				print(message.decode())
+				if (message.decode()[0:20] == ' ECE369 Peer Active ') and (clientAddress not in self.peersList):
+					self.peersList.append(clientAddress)
+				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
+					self.peersList.remove(clientAddress) 
+				
+				ackMessage = 'Receipt Acknowledged from: ' + self.addr
+				serverS.sendto(ackMessage.encode(), clientAddress)
+		except KeyboardInterrupt:
+			print("Keyboard Interrupt!")
+			exit(1)
+		except Exception as ex:
+			print("Exception: %s" % ex)
+			exit(1)
+	
+	def clientSide(self):
+		print("Starting Client Thread!")	
+		try:
+			clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			clientS.settimeout(1)	# set socket timeout as 1 second
+			typedInput=input("Input message to send: ")
+			message = ''
+			if typedInput == 'Quit':
+				message = ' ECE369 Peer Quit ' + self.addr
+			else:
+				message = typedInput
+			for peer in self.peersList:
+				try:	# Try to send message to each peer in peersList
+					clientS.sendto(message.encode(), (peer, self.ServerPort))
+					responseMessage, peerAddress = clientS.recvfrom(2048)
+					print("Acknowledge Received from ", peerAddress)
+					print(responseMessage)
+				except KeyboardInterrupt:
+					print("Keyboard Interrupt!")
+					exit(1)
+				except TimeoutError as ex:
+					print("Timout Exception: %s" % ex)
+					self.peersList.remove(peer)
+				except Exception as ex:
+					print("Exception: %s" % ex)
+					exit(1)
+
+		except KeyboardInterrupt:
+			print("Keyboard Interrupt!")
+			exit(1)
+		except Exception as ex:
+			print("Exception: %s" % ex)
+			exit(1)
+
 	def __init__(self):
 		#self.addr = input("Enter your IP Address from ifconfig: eg. 192.168.0.150")
 		self.hostname = socket.gethostname()
@@ -45,9 +79,9 @@ class UDPPeer:
 		try:	# Try sending broadcast to scan for other peers on network
 			BroadcastS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			BroadcastS.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-			broadcastMessage = bytes(' ECE369 ' + self.addr, 'utf-8')
+			broadcastMessage = ' ECE369 Peer Active ' + self.addr
 			#BroadcastS.sendto(broadcastMessage,('255.255.255.255', 12000))
-			BroadcastS.sendto(broadcastMessage,('<broadcast>', 12000))
+			BroadcastS.sendto(broadcastMessage.encode(),('<broadcast>', 12000))
 			BroadcastS.close
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
@@ -56,17 +90,13 @@ class UDPPeer:
 			print("Exception: %s" % ex)
 			exit(1)
 
-
-		try:	# Try setting up the server
-			serverS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			serverS.bind(('',self.ServerPort))
-			print("ServerSide is ready to receive.")
-			while self.serverRunning:
-				message, clientAddress = serverS.recvfrom(2048)
-				print("Message Received from: ", clientAddress)
-				print(message.decode())
-				ackMessage = 'Acknowledge Receipt'
-				serverS.sendto(ackMessage.encode(), clientAddress)
+		try:	# Try setting up threads for handling the client and server side of this peer
+			# Create two new threads
+			serverThread = threading.Thread(target=self.serverSide, args=())
+			clientThread = threading.Thread(target=self.clientSide, args=())
+			# Start the two threads
+			serverThread.start()
+			clientThread.start()
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
