@@ -63,7 +63,7 @@ class UDPPeer:
 			print("ServerSide is ready to receive.")
 			while self.serverRunning:
 				message, clientAddress = serverS.recvfrom(2048)
-				print("Message Received: ")
+				print("Message Received from: ", clientAddress)
 				print(message.decode())
 				ackMessage = 'Acknowledge Receipt'
 				serverS.sendto(ackMessage.encode(), clientAddress)
