@@ -1,40 +1,30 @@
-/*https://www.binarytides.com/socket-programming-c-linux-tutorial*/
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
-#define CR printf("\n")
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <errno.h>
+
 #define DEFAULT_PORT 12000
+#define CR printf("\n")
 
 int serverLoop(int serverPort)
 {
-	int socketDescriptor;
-
-	struct in_addr
-	{
-		unsigned long s_addr;
-	};
-
-	struct sockaddr_in
-	{
-		short sin_family;
-		unsigned short sin_port;
-		struct in_addr sin_addr;
-		char sin_zero[8];
-	};
-
-	struct sockaddr
-	{
-		unsigned short sa_family;
-		char sa_data[14];
-
-	};
+	struct sockaddr_in server_addr, client_addr;
 
 
-	socketDescriptor=socket(AF_INET, SOCK_STREAM, 0);
-	if (socketDescriptor == -1)
-	{
-		printf("Error: Could not create socket. Quitting."); CR; 
-		return(1);
-	}
+
+
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_port=htons(serverPort);
+	server_addr.sin_addr.s_addr=INADDR_ANY;
+
+
+
+	return(0);
 }
 
 
@@ -60,3 +50,4 @@ int main(int argc, char * argv[])
 
 	return(serverLoop(serverPort));
 }
+
