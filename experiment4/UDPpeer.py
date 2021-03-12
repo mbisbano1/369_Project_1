@@ -1,6 +1,5 @@
-from socket import *
+import socket
 import sys, threading
-
 
 host_name = socket.gethostname()
 IP_ADDR = socket.gethostbyname(host_name)
