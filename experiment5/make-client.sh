@@ -1,3 +1,7 @@
+arg1=$1
+arg2=$2
+arg3=$3
+arg4=$4
 
 #compile
 gcc -std=c89 -pedantic -Wall \
@@ -6,7 +10,7 @@ gcc -std=c89 -pedantic -Wall \
     -Wbad-function-cast -Wstrict-overflow=5 -Wstrict-prototypes -Winline \
     -Wundef -Wnested-externs -Wcast-qual -Wshadow -Wunreachable-code \
     -Wlogical-op -Wfloat-equal -Wstrict-aliasing=2 -Wredundant-decls \
-    -Wold-style-definition -Werror \
+    -Wold-style-definition \
     -ggdb3 \
     -O0 \
     -fno-omit-frame-pointer -ffloat-store -fno-common -fstrict-aliasing \
@@ -15,14 +19,11 @@ gcc -std=c89 -pedantic -Wall \
 
 
 if [[ $? -eq 0 ]]; then
-	echo ===========
 	valgrind --leak-check=full \
 		 --show-leak-kinds=all \
 		 --track-origins=yes \
 		 --quiet \
-		 ./exec-UDPClientTimer
-	echo ===========
-	echo Returned $?
+		 ./exec-UDPClientTimer $arg1 $arg2 $arg3 $arg4
 else
 	echo Build failed, not executing
 fi

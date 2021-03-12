@@ -1,8 +1,15 @@
 #include <stdio.h>
 #define CR printf("\n")
 
-int main(void)
+int main(int argc, char * argv[])
 {
-	printf("This is the server."); CR; 
-	return(3);
+	if (argc != 2)
+	{
+		printf("Usage: ./UDPServer.c server_port"); CR; 
+		return(1);
+	}
+
+	printf("You entered a server port value of %s", argv[1]); CR;
+
+	return(0);
 }
