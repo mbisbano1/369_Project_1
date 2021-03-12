@@ -60,6 +60,7 @@ class UDPPeer:
 				except TimeoutError as ex:
 					print("Timout Exception: %s" % ex)
 					self.peersList.remove(peer)
+					print("Removed ", peer, " from peersList")
 				except Exception as ex:
 					print("Exception: %s" % ex)
 					exit(1)
