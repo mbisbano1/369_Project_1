@@ -45,9 +45,11 @@ class UDPPeer:
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
-		except:
-			print("error sending broadcast message")
+		except Exception as ex:
+			print("Exception: %s" % ex)
 			exit(1)
+
+
 		try:	# Try setting up the server
 			serverS=socket(AF_INET, SOCK_DGRAM)
 			serverS.bind(('',self.ServerPort))
@@ -55,8 +57,8 @@ class UDPPeer:
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
-		except:
-			print("Server unable to be bound")
+		except Exception as ex:
+			print("Exception: %s" % ex)
 			exit(1)
 
 UDPPeer()
