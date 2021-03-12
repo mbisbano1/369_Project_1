@@ -1,5 +1,5 @@
 import socket
-import sys, threading
+import sys, threading, time
 
 class UDPPeer:
 	"""UDP P2P Class/Object"""
@@ -27,9 +27,11 @@ class UDPPeer:
 				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
 					self.peersList.remove(clientAddress[0]) 
 					print("Removed ", clientAddress[0], " from peersList")
-				
-				ackMessage = 'Receipt Acknowledged from: ' + self.addr
-				serverS.sendto(ackMessage.encode(), (clientAddress[0], self.ServerPort))
+				if (message.decode()[0:18] != 'Acknowledged from: '):
+					#don't ack an ack you muppet
+					ackMessage = 'Acknowledged from: ' + self.addr
+					serverS.sendto(ackMessage.encode(), (clientAddress[0], self.ServerPort))
+
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
@@ -39,38 +41,39 @@ class UDPPeer:
 	
 	def clientSide(self):
 		print("Starting Client Thread!")	
-		try:
-			clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			clientS.settimeout(1)	# set socket timeout as 1 second
-			typedInput=input("Input message to send: ")
-			message = ''
-			if typedInput == 'Quit':
-				message = ' ECE369 Peer Quit ' + self.addr
-			else:
-				message = typedInput
-			for peer in self.peersList:
-				try:	# Try to send message to each peer in peersList
-					clientS.sendto(message.encode(), (peer, self.ServerPort))
-					responseMessage, peerAddress = clientS.recvfrom(2048)
-					print("Acknowledge Received from ", peerAddress)
-					print(responseMessage)
-				except KeyboardInterrupt:
-					print("Keyboard Interrupt!")
-					exit(1)
-				except TimeoutError as ex:
-					print("Timout Exception: %s" % ex)
-					self.peersList.remove(peer)
-					print("Removed ", peer, " from peersList")
-				except Exception as ex:
-					print("Exception: %s" % ex)
-					exit(1)
-
-		except KeyboardInterrupt:
-			print("Keyboard Interrupt!")
-			exit(1)
-		except Exception as ex:
-			print("Exception: %s" % ex)
-			exit(1)
+		while 1:
+			try:
+				clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+				clientS.settimeout(1)	# set socket timeout as 1 second
+				typedInput=input("Input message to send: ")
+				message = ''
+				if typedInput == 'Quit':
+					message = ' ECE369 Peer Quit ' + self.addr
+				else:
+					message = typedInput
+				for peer in self.peersList:
+					try:	# Try to send message to each peer in peersList
+						clientS.sendto(message.encode(), (peer, self.ServerPort))
+						responseMessage, peerAddress = clientS.recvfrom(2048)
+						print("Acknowledge Received from ", peerAddress)
+						print(responseMessage)
+					except KeyboardInterrupt:
+						print("Keyboard Interrupt!")
+						exit(1)
+					except TimeoutError as ex:
+						print("Timout Exception: %s" % ex)
+						self.peersList.remove(peer)
+						print("Removed ", peer, " from peersList")
+					except Exception as ex:
+						print("Exception: %s" % ex)
+						exit(1)
+			except KeyboardInterrupt:
+				print("Keyboard Interrupt!")
+				exit(1)
+			except Exception as ex:
+				print("Exception: %s" % ex)
+				exit(1)
+			time.sleep(1)
 
 	def __init__(self):
 		#self.addr = input("Enter your IP Address from ifconfig: eg. 192.168.0.150")
