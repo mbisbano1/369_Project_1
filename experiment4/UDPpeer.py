@@ -2,10 +2,10 @@ from socket import *
 import sys, threading
 
 
-#host_name = socket.gethostname()
-#IP_ADDR = socket.gethostbyname(host_name)
-#print("Host name is: ", host_name)
-#print("IP ADDR is: ", IP_ADDR)
+host_name = socket.gethostname()
+IP_ADDR = socket.gethostbyname(host_name)
+print("Host name is: ", host_name)
+print("IP ADDR is: ", IP_ADDR)
 #HOST = socket.get_hostbyname(socket.get_hostname())
 
 #global server_address	# = ''
