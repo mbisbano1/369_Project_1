@@ -11,10 +11,16 @@ class UDPPeer:
 	serverRunning = True	# Each peer has a status for it's server and client side
 	clientRunning = True	# ...
 	
+	def quit(self):
+		print("Quitting!")
+		self.serverRunning = False
+		self.clientRunning = False
+
 	def serverSide(self):
 		print("Starting Server Thread!")
 		try:	# Try setting up the server
 			serverS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			serverS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			serverS.bind(('',self.ServerPort))
 			print("ServerSide is ready to receive.")
 			while self.serverRunning:
@@ -42,10 +48,12 @@ class UDPPeer:
 	
 	def clientSide(self):
 		print("Starting Client Thread!")	
-		while 1:
-			try:
-				clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-				clientS.settimeout(1)	# set socket timeout as 1 second
+		
+		try:
+			clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			clientS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			clientS.settimeout(1)	# set socket timeout as 1 second
+			while self.clientRunning:
 				typedInput=input("Input message to send: ")
 				message = ''
 				if typedInput == 'Quit':
@@ -68,13 +76,13 @@ class UDPPeer:
 					except Exception as ex:
 						print("Exception: %s" % ex)
 						exit(1)
-			except KeyboardInterrupt:
-				print("Keyboard Interrupt!")
-				exit(1)
-			except Exception as ex:
-				print("Exception: %s" % ex)
-				exit(1)
-			time.sleep(1)
+		except KeyboardInterrupt:
+			print("Keyboard Interrupt!")
+			exit(1)
+		except Exception as ex:
+			print("Exception: %s" % ex)
+			exit(1)
+		time.sleep(1)
 
 	def __init__(self):
 		#self.addr = input("Enter your IP Address from ifconfig: eg. 192.168.0.150")
@@ -86,6 +94,7 @@ class UDPPeer:
 		try:	# Try sending broadcast to scan for other peers on network
 			BroadcastS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			BroadcastS.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+			BroadcastS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			broadcastMessage = ' ECE369 Peer Active ' + self.addr
 			#BroadcastS.sendto(broadcastMessage,('255.255.255.255', 12000))
 			BroadcastS.sendto(broadcastMessage.encode(),('<broadcast>', 12000))
