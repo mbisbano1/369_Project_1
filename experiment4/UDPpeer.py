@@ -24,6 +24,7 @@ class UDPPeer:
 				if (message.decode()[0:20] == ' ECE369 Peer Active ') and (clientAddress not in self.peersList):
 					self.peersList.append(clientAddress[0])
 					print("Appended ", clientAddress[0], " to peersList")
+					time.sleep(1)
 				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
 					self.peersList.remove(clientAddress[0]) 
 					print("Removed ", clientAddress[0], " from peersList")
