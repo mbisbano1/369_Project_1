@@ -34,7 +34,7 @@ class UDPPeer:
 				elif (clientAddress in self.peersList) and (message.decode()[0:18] == ' ECE369 Peer Quit '):
 					self.peersList.remove(clientAddress[0]) 
 					print("Removed ", clientAddress[0], " from peersList")
-				if (message.decode()[0:18] != 'Acknowledged from: '):
+				if (message.decode()[0:19] != 'Acknowledged from: '):
 					#don't ack an ack you muppet
 					ackMessage = 'Acknowledged from: ' + self.addr
 					serverS.sendto(ackMessage.encode(), (clientAddress[0], self.ServerPort))
