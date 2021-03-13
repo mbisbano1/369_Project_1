@@ -27,7 +27,7 @@ class UDPPeer:
 				message, clientAddress = serverS.recvfrom(2048)
 				print("Message Received from: ", clientAddress)
 				print(message.decode())
-				if (message.decode()[0:20] == ' ECE369 Peer Active ') and (clientAddress not in self.peersList):
+				if (clientAddress[0] not in self.peersList):
 					self.peersList.append(clientAddress[0])
 					print("Appended ", clientAddress[0], " to peersList")
 					time.sleep(1)
@@ -52,17 +52,25 @@ class UDPPeer:
 		try:
 			clientS=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			clientS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			clientS.settimeout(1)	# set socket timeout as 1 second
+			clientS.settimeout(3)	# set socket timeout as 1 second
 			while self.clientRunning:
+				self.waitingForInput = True
 				typedInput=input("Input message to send: ")
+				self.waitingForInput = False
 				message = ''
 				if typedInput == 'Quit':
+					print("message sent will be quit message..")
 					message = ' ECE369 Peer Quit ' + self.addr
 				else:
+					print("message sent will be input message..")
 					message = typedInput
 				for peer in self.peersList:
 					try:	# Try to send message to each peer in peersList
+						print("Sending to: ")
+						print("	peer: ", peer)
+						print("	port: ", str(self.ServerPort))
 						clientS.sendto(message.encode(), (peer, self.ServerPort))
+
 						responseMessage, peerAddress = clientS.recvfrom(2048)
 						print("Acknowledge Received from ", peerAddress)
 						print(responseMessage)
@@ -75,13 +83,13 @@ class UDPPeer:
 						print("Removed ", peer, " from peersList")
 					except Exception as ex:
 						print("Exception: %s" % ex)
-						exit(1)
+						#exit(1)
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
 		except Exception as ex:
 			print("Exception: %s" % ex)
-			exit(1)
+			#exit(1)
 		time.sleep(1)
 
 	def __init__(self):
@@ -98,6 +106,7 @@ class UDPPeer:
 			broadcastMessage = ' ECE369 Peer Active ' + self.addr
 			#BroadcastS.sendto(broadcastMessage,('255.255.255.255', 12000))
 			BroadcastS.sendto(broadcastMessage.encode(),('<broadcast>', 12000))
+			print("Broadcast Sent!")
 			BroadcastS.close
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
@@ -113,6 +122,7 @@ class UDPPeer:
 			# Start the two threads
 			serverThread.start()
 			clientThread.start()
+			print("Both Threads Started")
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
 			exit(1)
