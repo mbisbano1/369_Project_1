@@ -13,7 +13,19 @@
 
 int serverLoop(int serverPort)
 {
+	int sock;
 	struct sockaddr_in server_addr, client_addr;
+
+	sock=socket(AF_INET, SOCK_DGRAM, 0);
+	if (sock == -1)
+	{
+		printf("Error: Could not create socket. Quitting."); CR; 
+		return(1);
+	}
+
+
+
+	
 
 
 
@@ -21,6 +33,15 @@ int serverLoop(int serverPort)
 	server_addr.sin_family=AF_INET;
 	server_addr.sin_port=htons(serverPort);
 	server_addr.sin_addr.s_addr=INADDR_ANY;
+	bzero(&(server_addr.sin_zero),8);
+
+	if (bind(sock,(struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
+	{
+		printf("Error: Could not bind socket. Quitting."); CR; 
+		return(1);
+
+	}
+
 
 
 
