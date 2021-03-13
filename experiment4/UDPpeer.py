@@ -82,7 +82,8 @@ class UDPPeer:
 						self.peersList.remove(peer)
 						print("Removed ", peer, " from peersList")
 					except Exception as ex:
-						print("Exception: %s" % ex)
+						ex = ''
+						#print("Exception: %s" % ex)
 						#exit(1)
 		except KeyboardInterrupt:
 			print("Keyboard Interrupt!")
