@@ -1,45 +1,47 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <errno.h>
 
 #define DEFAULT_PORT 12000
+#define DEFAULT_IP "127.0.0.1"
 #define CR printf("\n")
+
 
 int serverLoop(int serverPort)
 {
-	int sock;
+	int socketDescriptor;
 	struct sockaddr_in server_addr, client_addr;
 
-	sock=socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock == -1)
+	socketDescriptor=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	if (socketDescriptor < 0)
 	{
-		printf("Error: Could not create socket. Quitting."); CR; 
+		printf("Error: could not create socket."); CR; 
 		return(1);
 	}
 
 
+	/*set socket library settings*/
 	server_addr.sin_family=AF_INET;
-	server_addr.sin_port=htons(serverPort);
-	server_addr.sin_addr.s_addr=INADDR_ANY;
-	bzero(&(server_addr.sin_zero),8);
+	server_addr.sin_port=serverPort;
+	server_addr.sin_addr.s_addr=inet_addr(DEFAULT_IP);
 
-	if (bind(sock,(struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
+
+	/*bind*/
+	if (bind(socketDescriptor, (struct sockaddr*)&server_addr, sizeof(server_addr)))
 	{
-		printf("Error: Could not bind socket. Quitting."); CR; 
+		printf("Error: could not bind to port."); CR;
 		return(1);
-
 	}
+
+	/*listen*/
+	printf("Now listening for messages..."); CR; 
 
 
 	return(0);
-}
 
+}
 
 int main(int argc, char * argv[])
 {
@@ -51,7 +53,7 @@ int main(int argc, char * argv[])
 		if (sscanf(argv[1], "%u", &serverPort) != 1)
 		{
 			printf("Error: Input value not an integer. Quitting."); CR; 
-			return(1);
+			return 1;
 		}
 	}
 	else
@@ -62,5 +64,9 @@ int main(int argc, char * argv[])
 	}
 
 	return(serverLoop(serverPort));
+
+
+
+
 }
 
