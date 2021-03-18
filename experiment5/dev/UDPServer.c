@@ -14,7 +14,7 @@ int serverLoop(int serverPort)
 	int socketDescriptor;
 	char receivedClientMessage[MAX_MESSAGE_LENGTH];
 	struct sockaddr_in server_addr, client_addr;
-	int clientStructLength=sizeof(client_addr);
+	unsigned int clientStructLength=sizeof(client_addr);
 
 	socketDescriptor=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
