@@ -7,9 +7,8 @@
 #define CR printf("\n")
 #define MAX_MESSAGE_SIZE 2048
 
-int udpClient(char * serverAddress, int serverPort) 
+int UDPClientTimer(char * serverAddress, int serverPort) 
 {
-
 	unsigned long int i;
 	int socketDescriptor;
 	struct sockaddr_in server_addr;
@@ -67,13 +66,28 @@ int udpClient(char * serverAddress, int serverPort)
 		/*end timer and calculate total time*/
 		totalTime=(long int)(clock() - startTime);
 
-		printf("[Response in %ld RTT] %s", totalTime, messageFromServer); 
+		printf("[Response in %ld clock cycles] %s", totalTime, messageFromServer); 
 	}
 }
 
-int main(void)
+int main(int argc, char * argv[])
 {
-	udpClient("127.0.0.1", 12000);
-	return(0);
-}
+	unsigned int serverPort;
 
+	if (argc == 3)
+	{
+		/*convert port number to int*/
+		if (sscanf(argv[2], "%u", &serverPort) != 1)
+		{
+			printf("Error: input value invalid."); CR;
+			return(1);
+		}
+
+		return(UDPClientTimer(argv[1], serverPort));
+	}
+	else
+	{
+		printf("Usage: ./UDPClient server_address server_port"); CR;
+		return(1);
+	}
+}
