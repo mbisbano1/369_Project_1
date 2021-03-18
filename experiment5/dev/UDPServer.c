@@ -12,12 +12,19 @@
 int serverLoop(int serverPort)
 {
 	int socketDescriptor;
+	unsigned long int i;
 	char receivedClientMessage[MAX_MESSAGE_LENGTH];
 	struct sockaddr_in server_addr, client_addr;
 	unsigned int clientStructLength=sizeof(client_addr);
 
-	socketDescriptor=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	/*clear string*/
+	for (i=0; i<MAX_MESSAGE_LENGTH; i++)
+	{
+		receivedClientMessage[i]='\0';
+	}
 
+	/*open socket*/
+	socketDescriptor=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (socketDescriptor < 0)
 	{
 		printf("Error: could not create socket."); CR; 
@@ -46,7 +53,23 @@ int serverLoop(int serverPort)
 	}
 
 	/*have message, now send back uppercase version*/
-	printf("Message from %s:%i: %s", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), receivedClientMessage); CR;
+	printf("[%s:%i] %s", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), receivedClientMessage); CR;
+	for(i=0; i<MAX_MESSAGE_LENGTH; i++)
+	{
+		if (receivedClientMessage[i] >= 'a' && receivedClientMessage[i] <= 'z')
+		{
+			receivedClientMessage[i] -= 'a' - 'A';
+		}
+	}
+
+	/*send uppercase string to client*/
+	if (sendto(socketDescriptor, receivedClientMessage, sizeof(receivedClientMessage), 0, \
+		(struct sockaddr*)&client_addr, clientStructLength) < 0)
+	{
+		printf("Error: could not send data to client."); CR; 
+		return(1);
+	}
+
 
 
 	return(0);
