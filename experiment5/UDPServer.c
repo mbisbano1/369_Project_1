@@ -27,7 +27,7 @@ int serverLoop(int serverPort)
 	server_addr.sin_family=AF_INET;
 	server_addr.sin_port=htons(serverPort);
 	server_addr.sin_addr.s_addr=INADDR_ANY;
-	bzero(&(server_addr.sin_zero),8);
+	/*bzero(&(server_addr.sin_zero),8);*/
 
 	if (bind(sock,(struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
 	{
