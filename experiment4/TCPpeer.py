@@ -16,6 +16,7 @@ class TCPpeer:
 	hostname = ''			# Each peer has it's own hostname
 	addr = ''               # Each peer has it's own address
 	peersList = []          # Each peer maintains a list of other peers addresses.add()
+	newPeersList = []		# each peer has a new list of peers to compare 
 	peersConnectedList = [] # each peer has a flag for if a client is connected to it.
 	serverRunning = False	# Each peer has a status for it's server and client side
 	clientRunning = False	# ...
@@ -25,7 +26,7 @@ class TCPpeer:
 	isNextMaster = False
 	masterTimeOut = False 
 
-	newPeersList = False
+	newPeers = False
 
 
 	wantToShutdown = False
@@ -45,17 +46,19 @@ class TCPpeer:
 					rxPeerFlag = message.decode()[0:21]
 					
 					if ((rxPeerFlag == peerFlag) and (clientAddress[0] not in self.peersList)):
-						# update peersList, set newPeersList flag
+						# update peersList, set newPeers flag
 						self.peersList.append(clientAddress[0])
 						print("Appended ", clientAddress[0], " to peersList")
-						self.newPeersList = True
+						self.newPeers = True
 
 						# delay a tiny bit (200mS)
 						time.sleep(0.2)
 
 						# send peersList to new peer! Welcome to the fun!
 						peersListStr = ' '.join(self.peersList)
+						#for peer in self.peersList:
 						MasterS.sendto(peersListStr.encode(), clientAddress)
+
 					else:
 						print("Sorry")
 						print(rxPeerFlag + 'rx')
@@ -167,7 +170,7 @@ class TCPpeer:
 			sys.exit(1)
 
 		while(self.peerRunning):
-			if(self.newPeersList):
+			if(self.newPeers):
 				correctNumClients = len(self.peersList)-1
 				self.indexInPeersList = self.peersList.index(self.addr); 
 				#startIndex = self.numClients
@@ -177,7 +180,7 @@ class TCPpeer:
 						 self.peersConnectedList.append(True)
 						#hi = 2
 
-				self.newPeersList = False
+				self.newPeers = False
 
 		#clientSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -212,7 +215,7 @@ class TCPpeer:
 		print("Started the Broadcast Handler Thread, it will scan for other peers to connect to!")
 
 		# wait for broadcastHandler thread to determine role
-		time.sleep(TimeoutDelay + 3)
+		broadcastHandler_thread.join()
 
 		if self.isMaster:	
 			master_thread = threading.Thread(target=self.Master, args=())
