@@ -22,6 +22,8 @@ class TCPpeer:
 	clientRunning = False	# ...
 	numClients = 0
 
+	clientThreads = [] 		# Each peer has a list of client threads running.
+
 	isMaster = False
 	isNextMaster = False
 	masterTimeOut = False 
@@ -32,6 +34,10 @@ class TCPpeer:
 	wantToShutdown = False
 	readyToShutdown = False
 	peerRunning = False	
+
+	Message = ''
+	MessageQueued = False
+	MessagesSent = 0
 
 	#peerScanRunning = False # Each peer has a status for if it is still accepting UDP broadcast messages to map other peers in network
 
@@ -89,7 +95,7 @@ class TCPpeer:
 			BroadcastS.settimeout(TimeoutDelay)
 			broadcastMessage = peerFlag + self.addr
 			#BroadcastS.sendto(broadcastMessage,('255.255.255.255', 12000))
-			BroadcastS.sendto(broadcastMessage.encode(),('<broadcast>', 12000))
+			BroadcastS.sendto(broadcastMessage.encode(),('<broadcast>', 42069))
 			print("Broadcast Sent!")
 			print("Wait", str(TimeoutDelay) ,"seconds for response:")
 			#self.peerScanRunning = True
@@ -143,15 +149,27 @@ class TCPpeer:
 
 			try:
 				clientSocket.connect((targetServerAddr, targetServerPort))
-			except ConnectionRefusedError:
-				print("[Error] Connection refused. Exiting.")
+			except Exception as e:
+				print("Client Thread connect error: %s" %e)
 				exit(1)
 
-			sentence=input("Input lowercase sentence: ")
-			clientSocket.send(sentence.encode())
-			modifiedSentence=clientSocket.recv(1024) #blocking
-			print("From server: %s" % modifiedSentence.decode())
-			clientSocket.close()
+			while(True):
+				if (self.MessageQueued):
+					print("Client Thread has Message Queued")
+					#sentence=input("Input lowercase sentence: ")
+					try:
+						clientSocket.send(self.Message.encode())
+						modifiedMessage=clientSocket.recv(1024) #blocking
+						print("From server: %s" % modifiedMessage.decode())
+						self.MessagesSent = self.MessagesSent+1
+						print("incremented MessagesSent value")
+					except Exception as e:
+						print("internal client Thread error: %s" %e)
+					while (self.MessageQueued):
+						#wait till all clients send message before exiting
+						a = 0
+					print("Thread done waiting for all clients to send message")
+					#clientSocket.close()
 
 		except KeyboardInterrupt:
 			print("Keyboard interrupt")
@@ -159,28 +177,62 @@ class TCPpeer:
 
 
 	def clientSideManager(self):
-		try:
-			masterAddr = self.peersList[0]
-			masterClient_thread = threading.Thread(target=self.clientTask, args=(self, masterAddr, serverPort))
-			masterClient_thread.start()
-			self.numClients = self.numClients + 1
-			self.peersConnectedList.append(True)
-		except Exception as ex:
-			print("clientSideManager MasterClient Exception: %s" %ex)
-			sys.exit(1)
+		if(not self.isMaster):
+			try:
+				masterAddr = self.peersList[0][0]
+				print("Master Address is: %s" %masterAddr)
+				masterClient_thread = threading.Thread(target=self.clientTask, args=(masterAddr, serverPort))
+				self.clientThreads.append(masterClient_thread)
+				masterClient_thread.start()
+				self.numClients = self.numClients + 1
+				self.peersConnectedList.append(True)
+			except Exception as ex:
+				print("clientSideManager MasterClient Exception: %s" %ex)
+				sys.exit(1)
 
 		while(self.peerRunning):
 			if(self.newPeers):
 				correctNumClients = len(self.peersList)-1
-				self.indexInPeersList = self.peersList.index(self.addr); 
+				self.indexInPeersList = self.peersList.index(self.addr)
 				#startIndex = self.numClients
 				
 				for i in range(1, len(self.peersList)):
-					if (i != self.indexInPeersList) and ( = len(self.peersConnectedList)):
-						 self.peersConnectedList.append(True)
+					if (i != self.indexInPeersList) and (correctNumClients >= len(self.peersConnectedList)):
+						self.peersConnectedList.append(True)
+						print("Starting new Client Thread: Addr = %s" %self.peersList[i])
+						newClientThread = threading.Thread(target=self.clientTask, args=(self.peersList[i], serverPort))
+						self.clientThreads.append(newClientThread)
+						newClientThread.start()
 						#hi = 2
 
 				self.newPeers = False
+			
+			InputMessage = input("Input message to send to peers: ")
+			self.Message = InputMessage
+			self.MessagesSent = 0
+			self.MessageQueued = True
+			print("Manager set MessageQueued to True")
+
+			print("Manager waiting for all client threads to send message")
+			print("self.MessagesSent = ", self.MessagesSent)
+			print("length of self.clientThreads = ", len(self.clientThreads))
+			while(self.MessagesSent < len(self.clientThreads)):
+				#wait here doing nothing till all clients Threads send message
+				a = 0
+			print("Manager done waiting for client threads to send message!")
+			self.MessageQueued = False
+			self.Message = ''
+			self.MessagesSent = 0
+
+			#for i in range(0, len(self.clientThreads)-1)
+
+
+
+			#sentence=input("Input lowercase sentence: ")
+			#clientSocket.send(sentence.encode())
+			#modifiedSentence=clientSocket.recv(1024) #blocking
+			#print("From server: %s" % modifiedSentence.decode())
+			#clientSocket.close()
 
 		#clientSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -189,13 +241,15 @@ class TCPpeer:
 			serverSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			serverSocket.bind(('', serverPort))
 			serverSocket.listen(maxNumPeers)
-			print("The server is ready to receive" + str(maxNumPeers) +"peers.")
+			print("The server is ready to receive " + str(maxNumPeers) +" peers.")
 			while 1:
 					connectionSocket, addr = serverSocket.accept()
 					sentence=connectionSocket.recv(1024).decode()
 					capitalizedSentence=sentence.upper()
+					print("Received Message from: %s" %addr[0])
+					print("Message: %s" %sentence)
 					connectionSocket.send(capitalizedSentence.encode())
-					connectionSocket.close()
+					#connectionSocket.close()
 
 		except KeyboardInterrupt:
 			print("Keyboard interrupt")
