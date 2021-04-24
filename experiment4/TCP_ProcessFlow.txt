@@ -1,0 +1,19 @@
+TCP Peer starts:
+	1.	TCP Peer sends UDP Broadcast hello world message:
+			-if no response:
+				 become masterPeer!
+				 maintain UDP Broadcast socket on thread. Start TCP threads & sockets.
+				  - when rx UDP Broadcast hello world message:
+				  		add IP.src to self.peersList
+						return self.peersList to peer!
+						-if first response: 
+						  	assign peer as backupMaster.
+				  		
+			-if response:
+				become slavePeer
+				add peers in response peersList to self.peersList
+				-if assigned backupMaster role: 
+					maintain UDP Broadcast socket on thread, don't listen unless masterPeer stops responding or signals shutdown.
+				-else
+					close UDP Broadcast socket
+				open TCP server/client threads & sockets.
