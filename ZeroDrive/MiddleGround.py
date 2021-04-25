@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import shutil
 import os, sys
 
@@ -21,10 +22,7 @@ def make_zip(source, destination):
 
 #Beginning of code
 
-make_zip(source, destination)
+make_zip(source, destination)	
 
-while(True):
-	a = 0
-	
 
 
