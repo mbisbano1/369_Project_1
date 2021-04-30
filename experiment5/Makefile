@@ -8,3 +8,7 @@ UDPClientTimer:
 
 UDPServer:
 	$(CC) ./source/UDPServer.c $(CFLAGS) -o UDPServer
+
+clean:
+	rm -f ./UDPClientTimer
+	rm -f ./UDPServer
