@@ -12,6 +12,7 @@ int UDPClientTimer(char * serverAddress, int serverPort)
 	unsigned long int i;
 	int socketDescriptor;
 	struct sockaddr_in server_addr;
+	struct timeval timeVal;
 	unsigned int serverStructLength=sizeof(server_addr);
 	char messageFromServer[MAX_MESSAGE_SIZE];
 	char messageToSend[MAX_MESSAGE_SIZE];
@@ -29,7 +30,7 @@ int UDPClientTimer(char * serverAddress, int serverPort)
 	socketDescriptor=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (socketDescriptor < 0)
 	{
-		printf("Error: could not create socket."); CR; 
+		printf("[ERROR] could not create socket."); CR; 
 		return(1);
 	}
 
@@ -37,6 +38,14 @@ int UDPClientTimer(char * serverAddress, int serverPort)
 	server_addr.sin_family=AF_INET;
 	server_addr.sin_port=serverPort;
 	server_addr.sin_addr.s_addr=inet_addr(serverAddress);
+
+	/*set timeout*/
+	timeVal.tv_sec=10;
+	if (setsockopt(socketDescriptor, SOL_SOCKET, SO_RCVTIMEO, &timeVal, sizeof(timeVal)) < 0)
+	{
+		printf("[ERROR] could not set timeout value."); CR;
+	}
+
 	
 	while (1)
 	{
@@ -51,7 +60,7 @@ int UDPClientTimer(char * serverAddress, int serverPort)
 		if (sendto(socketDescriptor, messageToSend, sizeof(messageToSend), 0, \
 			(struct sockaddr*)&server_addr, serverStructLength) < 0)
 		{
-			printf("Error: could not send message."); CR; 
+			printf("[ERROR] Send timed out."); CR; 
 			return(1);
 		}
 
@@ -59,7 +68,7 @@ int UDPClientTimer(char * serverAddress, int serverPort)
 		if (recvfrom(socketDescriptor, messageFromServer, sizeof(messageFromServer), 0, \
 			(struct sockaddr*)&server_addr, &serverStructLength) < 0)
 		{
-			printf("Error: could not receive message."); CR;
+			printf("[ERROR] Receive timed out."); CR;
 			return(1);
 		}
 
@@ -79,7 +88,7 @@ int main(int argc, char * argv[])
 		/*convert port number to int*/
 		if (sscanf(argv[2], "%u", &serverPort) != 1)
 		{
-			printf("Error: input value invalid."); CR;
+			printf("[ERROR] input value invalid."); CR;
 			return(1);
 		}
 
